@@ -1,7 +1,12 @@
 # Z280 Microprocessor Board (Z280MB) 
+Zilog Z280 MPU Board
+### Specification
+- CPU clock 12MHz (Bus clock 6MHz)
+- ROM 2M-bit EEPROM x 2 (First 4k-Byte active) 
+- RAM 1M-bit SRAM x 2
+- I/O extention connector x 1
 
-## Files   
-       
+### Files   
 |File and Directory|Discription|
 |:---|:---|
 | Z280_MainBoard.pdf | MPU board circuit diagram |
@@ -9,6 +14,6 @@
 | Z280CPLD.PLD | ATF1502 CPLD definition file |
 | z280mon/ | Z280 mini monitor |
 
-## License
+### License
 MIT License
 
