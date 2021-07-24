@@ -9,4 +9,6 @@
 | Z280CPLD.PLD | ATF1502 CPLD definition file |
 | z280mon/ | Z280 mini monitor |
 
+## License
+MIT License
 
