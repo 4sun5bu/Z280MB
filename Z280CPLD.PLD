@@ -1,0 +1,61 @@
+Name     Z280 ;
+PartNo   00 ;
+Date     2021/04/25 ;
+Revision 01 ;
+Designer 4sun5bu ;
+Company  4sun5bu ;
+Assembly None ;
+Location Tokyo ;
+Device   f1502ispplcc44 ;
+
+PROPERTY ATMEL {TDI_PULLUP = ON};
+PROPERTY ATMEL {TMS_PULLUP = ON};
+PROPERTY ATMEL {PREASSIGN = KEEP};
+
+PIN 7 = TDI;
+PIN 13 = TMS;
+PIN 32 = TCK;
+PIN 38 = TDO;
+
+/* *************** INPUT PINS *********************/
+
+PIN	4 = AS;
+PIN	6 = ST3;
+PIN	8 = ST2;
+PIN	9 = ST1;
+PIN	11 = ST0;
+PIN	12 = DS;
+PIN	14 = RW;
+PIN	16 = BW;
+PIN	17 = A0;
+PIN	18 = A20;
+PIN	31 = A23;
+
+/* *************** OUTPUT PINS *********************/
+
+PIN	5 = ADL;  
+PIN	19 = ROMCS;
+PIN	20 = RAMCS;
+PIN	21 = MEMLRD;
+PIN	24 = MEMHRD;
+PIN	25 = MEMLWR;
+PIN	26 = MEMHWR;
+PIN	27 = !IORD;
+PIN	28 = !IOWR;
+PIN	29 = !IOREQ;
+
+ADL = !AS;
+ROMCS = A20;
+RAMCS = !A20;
+
+HSEL = !A0 # !BW;
+LSEL = A0 # !BW;
+MREQ = ST3 & !ST2 & !ST1;
+MEMLRD = !(MREQ & LSEL & !DS & RW);
+MEMHRD = !(MREQ & HSEL & !DS & RW);
+MEMLWR = !(MREQ & LSEL & !DS & !RW);
+MEMHWR = !(MREQ & HSEL & !DS & !RW);
+
+IOREQ = !ST3 & !ST2 & ST1 & !ST0 & !A23;
+IORD = IOREQ & !DS & RW;
+IOWR = IOREQ & !DS & !RW;
