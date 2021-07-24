@@ -1,5 +1,8 @@
 # Z280 Microprocessor Board (Z280MB) 
-Zilog Z280 MPU Board
+Zilog Z280 MPU Board in 16-bit Z-BUS mode   
+
+![Board Image](/Z280MB.JPG)
+
 ### Specification
 - CPU clock 12MHz (Bus clock 6MHz)
 - ROM 2M-bit EEPROM x 2 (First 4k-Byte active) 
