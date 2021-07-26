@@ -1,0 +1,7 @@
+*.ihx 
+*.lst
+*.rel 
+*.bin
+*.hlr
+*.swp
+.local.vimrc
