@@ -2,14 +2,18 @@
 
 objs = z280mon.rel ide.rel dcmnd.rel mcmnd.rel gcmnd.rel lcmnd.rel bcmnd.rel
 
-z280mon: $(objs)
-	aslink -b CODE=0x0000 -b RAM=0xf000 -i z280mon.ihx  $(objs)
-	makebin -p z280mon.ihx z280mon.bin
-	b2ihx -odd z280mon.bin > z280mono.ihx
-	b2ihx -even z280mon.bin > z280mone.ihx 
+all: splthx z280mon
+
+z280mon: $(objs) splthx
+	aslink -b CODE=0x2000 -b RAM=0xf000 -i z280mon.ihx  $(objs)
+	./splthx -odd z280mon.ihx > z280mono.ihx
+	./splthx -even z280mon.ihx > z280mone.ihx 
 
 .asm.rel:
 	asz280 -l -g -o $<
 
+splthx: splthx.c
+	gcc -o splthx splthx.c
+
 clean:
-	rm -f *.rel *.ihx *.lst *.hlr *.bin
+	rm -f *.rel *.ihx *.lst *.hlr *.bin splthx
