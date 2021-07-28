@@ -1,3 +1,10 @@
+/******************************************************************************
+ splthx.c
+  split HEX file into even/odd address data
+
+  Copyright (c) 2021 4sun5bu 
+******************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>
@@ -13,12 +20,11 @@ int main(int argc, char *argv[])
 {
     int select;
     int bcount;
-    int laddr;
+    int lnaddr;
     int type;
     int data;
-
     int obcount;
-    int oladdr;
+    int otfaddr;
     unsigned int sum;
 
     if (argc < 3) {
@@ -40,9 +46,11 @@ int main(int argc, char *argv[])
         goto finlz;
     }
     
+    otfaddr = 0;
     while (1) {
         sum = 0;
         
+        /* Read one line */
         if (fgets(linebuf, MAXLEN, fin) == NULL) {
             if (feof(fin)) 
                 break;
@@ -52,24 +60,22 @@ int main(int argc, char *argv[])
             }
         } 
 
-        if (sscanf(linebuf, ":%2x%4x%2x", &bcount, &laddr, &type) != 3)
+        /* Scan byte count, address and record type */
+        if (sscanf(linebuf, ":%2x%4x%2x", &bcount, &lnaddr, &type) != 3)
         {
             errno = 1;
             break;
         }
         
-        /* Check recode type */
+        /* Check the recode type */
         if (type == 0x01)
             break;
 
-        /* Adjust address */
-        if ((laddr & 0x0001) == select)
-            oladdr = laddr;
-        else
-            oladdr = laddr + 1;
+        /* Adjust the address */
+        otfaddr = lnaddr / 2;
 
-        /* Calcurate byte count */
-        if ((bcount & 0x0001) && ((laddr & 0x0001) == select))
+        /* Calcurate the byte count */
+        if ((bcount & 0x0001) && ((lnaddr & 0x0001) == select))
             obcount = bcount / 2 + 1;
         else 
             obcount = bcount / 2;
@@ -77,20 +83,23 @@ int main(int argc, char *argv[])
             continue;
         
         sum += obcount; 
-        sum += (oladdr / 256 + (oladdr & 0x00ff)); 
+        sum += (otfaddr / 256 + (otfaddr & 0x00ff)); 
 
-        printf(":%02X%04X%02X", obcount, oladdr, type);
+        printf(":%02X%04X%02X", obcount, otfaddr, type);
         for(int n = 0; n < bcount; n++) {
             if (sscanf(&linebuf[n * 2 + 9], "%2x", &data) != 1) {
                 errno = 1;
-                break;
+                goto finlz;
             }
-            if ((laddr & 0x0001) == select) {
+            if ((lnaddr & 0x0001) == select) {
                 printf("%02X", data);
                 sum += data;
+                otfaddr++;
             }
-            laddr++;
+            lnaddr++;
         }
+
+        /* Calcurate the checksum */
         sum = -(sum % 256) & 0xff;
         printf("%02X\n", sum);
     }

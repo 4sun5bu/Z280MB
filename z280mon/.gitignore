@@ -1,5 +1,6 @@
 *.ihx 
 *.lst
+*.map
 *.rel 
 *.bin
 *.hlr

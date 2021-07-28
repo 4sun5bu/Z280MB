@@ -64,7 +64,7 @@ SPC	.equ 0x20
 	ld	l, 0xfe
 	ld	c, IOPGR
 	ldctl	(c), hl
-	ld	hl, 38		; 4800 bps at 12MHz CPU cLock
+	ld	hl, 39		; 4800 bps at 12MHz CPU cLock
 	ld	c, CT1TC
 	out	(c), hl
 	ld	a, 0b10001000
@@ -293,6 +293,7 @@ adddel:
 
 pgdtbl:
 	.dw	0x000a
+	.dw	0x100a
 	.dw	0x101a
 	.dw	0x102a
 	.dw	0x103a
@@ -307,7 +308,6 @@ pgdtbl:
 	.dw	0x10ca
 	.dw	0x10da
 	.dw	0x10ea
-	.dw	0x10fa
 
 ;------------------------------------------------------------------------------
 	.area	RAM
