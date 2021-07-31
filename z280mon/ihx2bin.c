@@ -1,6 +1,6 @@
 /******************************************************************************
- splthx.c
-  split HEX file into even/odd address data
+ ihx2bin.c
+  make binary file from HEX file
 
   Copyright (c) 2021 4sun5bu 
 ******************************************************************************/
@@ -14,39 +14,34 @@
 
 int errno = 0;
 FILE *fin = NULL;
+FILE *fout = NULL;
 char linebuf[MAXLEN];
+unsigned char binbuf[MAXLEN];
 
 int main(int argc, char *argv[])
 {
-    int select;
     int bcount;
     int lnaddr;
     int type;
     int data;
-    int obcount;
-    int otfaddr;
+    int lsum;
+
     unsigned int sum;
 
-    if (argc < 3) {
-        errno = 3;
+    if (argc != 3) {
+        errno = 1;
         goto finlz;
     }
 
-    if (argc == 3)
-    {
-        if (strcmp(argv[1], "-odd") == 0)
-            select = 1;
-        else if (strcmp(argv[1], "-even") == 0)
-            select = 0;
-        fin = fopen(argv[2], "r");
-    }   
-    if (fin == NULL)
-    {
+    if ((fin = fopen(argv[1], "r")) == NULL) {
         errno = 2;
         goto finlz;
     }
+    if ((fout = fopen(argv[2], "wb")) == NULL) {
+        errno = 3;
+        goto finlz;
+    }   
     
-    otfaddr = 0;
     while (1) {
         sum = 0;
         
@@ -55,7 +50,7 @@ int main(int argc, char *argv[])
             if (feof(fin)) 
                 break;
             else {
-                errno = 1;
+                errno = 4;
                 goto finlz;
             }
         } 
@@ -63,7 +58,7 @@ int main(int argc, char *argv[])
         /* Scan byte count, address and record type */
         if (sscanf(linebuf, ":%2x%4x%2x", &bcount, &lnaddr, &type) != 3)
         {
-            errno = 1;
+            errno = 4;
             break;
         }
         
@@ -71,55 +66,51 @@ int main(int argc, char *argv[])
         if (type == 0x01)
             break;
 
-        /* Adjust the address */
-        otfaddr = lnaddr / 2;
+        fseek(fout, lnaddr, SEEK_SET);
 
-        /* Calcurate the byte count */
-        if ((bcount & 0x0001) && ((lnaddr & 0x0001) == select))
-            obcount = bcount / 2 + 1;
-        else 
-            obcount = bcount / 2;
-        if (obcount == 0)
-            continue;
-        
-        sum += obcount; 
-        sum += (otfaddr / 256 + (otfaddr & 0x00ff)); 
+        sum += bcount; 
+        sum += (lnaddr / 256 + (lnaddr & 0x00ff)); 
 
-        printf(":%02X%04X%02X", obcount, otfaddr, type);
         for(int n = 0; n < bcount; n++) {
             if (sscanf(&linebuf[n * 2 + 9], "%2x", &data) != 1) {
-                errno = 1;
+                errno = 4;
                 goto finlz;
             }
-            if ((lnaddr & 0x0001) == select) {
-                printf("%02X", data);
-                sum += data;
-                otfaddr++;
-            }
+            binbuf[n] = data;
+            sum += data;
             lnaddr++;
         }
 
         /* Calcurate the checksum */
-        sum = -(sum % 256) & 0xff;
-        printf("%02X\n", sum);
+        if ((sscanf(&linebuf[bcount * 2 + 9], "%2x", &lsum) != 1) ||
+           ((-(sum % 256) & 0xff) != lsum)) {
+            errno = 4;
+            goto finlz;
+        }
+        
+        fwrite(binbuf, 1, bcount, fout);
     }
 
 finlz:
     if (fin != NULL)
         fclose(fin);
+	if (fout != NULL)
+        fclose(fout);
 
     switch (errno) {
         case 0:
-            printf(":00000001FF\n");
             exit(EX_OK);
         case 1:
-            fprintf(stderr, "Illegal hex format\n");
-            exit(EX_DATAERR);
+            fprintf(stderr, "Usage : ihx2bin input-filei output-file\n");
+            exit(EX_USAGE);
         case 2:
-            fprintf(stderr, "No input file\n");
+            fprintf(stderr, "Can't open input file\n");
             exit(EX_NOINPUT);
         case 3:
-            fprintf(stderr, "Usage : splthx -even/-odd  input-file\n");
-            exit(EX_USAGE);
+            fprintf(stderr, "Can't open output file\n");
+            exit(EX_CANTCREAT);
+        case 4:
+            fprintf(stderr, "Illegal hex format\n");
+            exit(EX_DATAERR);
     }
 }
