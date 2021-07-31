@@ -11,13 +11,14 @@
 	.globl	lcmnd 
 
 lcmnd:
-	ldw	(ldadd), 0x0000
+	ldw	(ldad), 0x0000
 	call	skipsp
 	or 	a, a
 	jr	z, lcmnd1	; without load address
 	call	strhex16
 	jr	c, lerr
-	ld	(ldadd), de
+	ld	(ldad), de
+	ld	(jmpad), de
 lcmnd1:
 	ld	hl, linebuf
 	call	gets
