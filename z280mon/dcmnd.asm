@@ -23,24 +23,28 @@ dcmnd:
 	jr	nz, dcmnd2	
 dcmnd1:
 	ex	de, hl		; only start address
-	add	hl, 256
+	add	hl, 255
+	jr	nc, dcmnd11
+	ld	hl, 0xffff
+dcmnd11:
 	ld 	(dmpead), hl
 	ex	de, hl
 	jr	dcmnd3
 dcmnd2:
-	call	strhex16
+	call	strhex16	; with start and end address
 	jr	c, derr
-	ld	(dmpead), de	; with start and end address
+	ld	(dmpead), de	
 dcmnd3:
 	ld	de, (dmpsad)
 	call	puthex16
-	ld	hl, adddel
+	ld	hl, adrdel
 	call	puts
 	ld	hl, (dmpsad)
 	call	ldmp
 	ld	(dmpsad), hl
 	cp 	hl, (dmpead)
 	jr	c, dcmnd3
+	jr	z, dcmnd3
 	jp	loop
 derr:
 	ld	hl, derrmsg

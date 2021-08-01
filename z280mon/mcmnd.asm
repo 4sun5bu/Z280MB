@@ -21,7 +21,7 @@ mcmnd1:
 	ld	ix, (memad)
 	ld	de, (memad)
 	call	puthex16
-	ld	hl, adddel
+	ld	hl, adrdel
 	call	puts
 	ld	a, (ix)
 	ld	e, a
@@ -34,7 +34,10 @@ mcmnd1:
 mcmnd2:	
 	call	skipsp
 	or	a, a
-	jr	z, mcmnd1
+	jr	nz, mcmnd3
+	incw	(memad)
+	jr 	mcmnd1
+mcmnd3:
 	call	strhex8
 	jp	c, loop
 	ld	(ix), e

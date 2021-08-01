@@ -44,7 +44,7 @@ SPC	.equ 0x20
 	.globl	loop, cmnderr, dcmnd, gcmnd
 	.globl  putc, puts, putln, getc, gets
 	.globl	skipsp, puthex8, puthex16, strhex8, strhex16
-	.globl	adddel
+	.globl	adrdel
 
 	; MMU setting
 	ld	l, 0xff
@@ -274,6 +274,7 @@ strhex16::
 	call	strhex8
 	ret
 
+;------------------------------------------------------------------------------
 	.area	DATA 
 mesg:
 	.db	0x0d
@@ -287,7 +288,7 @@ prmpt:
 	.ascii	"> "
 	.db	0x00
 
-adddel:
+adrdel:
 	.ascii	" : "
 	.db	0x00
 
