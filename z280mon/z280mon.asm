@@ -312,7 +312,7 @@ pgdtbl:
 
 ;------------------------------------------------------------------------------
 	.area	RAM
-	.globl	dmpsad, dmpead, memad, jmpad, ldad, linebuf
+	.globl	dmpsad, dmpead, memad, jmpad, ldad, linebuf, dskbuf
 
 dmpsad:
 	.ds	2
@@ -328,6 +328,9 @@ ldad:
 	.ds	2
 
 linebuf:
-	.ds	256
+	.ds	128
+dskbuf:	
+	.ds 	1024
+	
 	.ds	256
 stkbtm:

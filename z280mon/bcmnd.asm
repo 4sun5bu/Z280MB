@@ -11,20 +11,16 @@
 	.globl	bcmnd 
 
 bcmnd:
-	ld	(baddr), 0xdc00
-	call	skipsp
-	or 	a, a
-	jr	z, bcmnd1	; without load address
-	call	strhex16
-	jr	c, berr
-	ld	(baddr), de
-bcmnd1:
-	ld	hl, 0
-	ld	(lbahl), hl
-	ld	(lball), hl
-	ld	hl, (baddr)
+	call	dskinit
+	ld	hl, dskbuf
 	call	dskread
-	jp	(baddr)
+	ld	(lball), 1
+	call	dskread
+	ld	de, (dskbuf + 2)
+	ld	hl, dskbuf
+	ld	bc, 1024
+	ldir
+	jp	(dskbuf + 2)
 berr:
 	ld	hl, berrmsg
 	jp	cmnderr
@@ -33,12 +29,6 @@ berr:
 	.area	DATA
 
 berrmsg:
-	.ascii	"Error! b [xxxx]"
+	.ascii	"Error! b"
 	.db	0
-
-;------------------------------------------------------------------------------
-	.area	RAM
-
-baddr:
-	.ds	2
 

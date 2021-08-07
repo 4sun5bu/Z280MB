@@ -36,17 +36,15 @@ dskinit:
 	ldctl	(c), hl 
 1$:	
 	in	a, (DEVSTAT)	; Check BUSY and DREQ bit
-	and	a, (BSYBIT | DREQBIT)
+	and	a, BSYBIT | DREQBIT
 	jr	nz, 1$
 	ld	a, 0x01
 	out	(FEATURE), a
 	ld	a, 0xef
 	out	(COMND), a
 	ld	hl, 0
-	ld	(lbahh), hl
-	ld	(lbahl), hl
-	ld	(lbalh), hl
 	ld	(lball), hl
+	ld	(lbahl), hl
 	ret
 
 dskread:
@@ -57,7 +55,7 @@ dskread:
 	pop	hl	
 1$:
 	in	a, (DEVSTAT)	; Check Busy bit
-	and	a, (BSYBIT | DREQBIT)
+	and	a, BSYBIT | DREQBIT
 	jr	nz, 1$
 	ld	a, 1		; one sector read
 	out	(SECTCNT), a
@@ -75,7 +73,7 @@ dskread:
 	out	(COMND), a
 2$:
 	in	a, (DEVSTAT)
-	and	a, (BSYBIT | DREQBIT)
+	and	a, BSYBIT | DREQBIT
 	cp	a, DREQBIT
 	jr	nz, 2$
 	in	a, (DEVSTAT)
@@ -97,7 +95,7 @@ dskwrt:
 	pop	hl
 1$:
 	in	a, (DEVSTAT)	; Check Busy bit
-	and	a, (BSYBIT | DREQBIT)
+	and	a, BSYBIT | DREQBIT
 	jr	nz, 1$
 	ld	a, 1		; one sector read
 	out	(SECTCNT), a
@@ -115,7 +113,7 @@ dskwrt:
 	out	(COMND), a
 2$:
 	in	a, (DEVSTAT)
-	and	a, (BSYBIT | DREQBIT)
+	and	a, BSYBIT | DREQBIT
 	cp	a, DREQBIT
 	jr	nz, 2$
 	in	a, (DEVSTAT)
