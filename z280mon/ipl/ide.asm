@@ -20,7 +20,7 @@ DRDYBIT	.equ	0b01000000
 DREQBIT	.equ	0b00001000
 ERRBIT	.equ	0b00000001
 
-	.area IPL (ABS)
+	.area IPL
 
     .globl dskinit, dskread, lball, lbalh, lbahl, lbahh
  

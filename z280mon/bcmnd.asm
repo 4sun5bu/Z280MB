@@ -20,7 +20,9 @@ bcmnd:
 	ld	hl, dskbuf
 	ld	bc, 1024
 	ldir
-	jp	(dskbuf + 2)
+	ld	hl, (dskbuf + 2)
+	jp	(hl)
+
 berr:
 	ld	hl, berrmsg
 	jp	cmnderr

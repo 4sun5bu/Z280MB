@@ -31,18 +31,20 @@ mcmnd1:
 	ld	hl, linebuf
 	call	gets
 	ld	hl, linebuf
-mcmnd2:	
-	call	skipsp
+	call	skipsp		; check empty
 	or	a, a
-	jr	nz, mcmnd3
+	jr	nz, mcmnd2
 	incw	(memad)
-	jr 	mcmnd1
-mcmnd3:
+	jr	mcmnd1
+mcmnd2:	
 	call	strhex8
 	jp	c, loop
 	ld	(ix), e
 	inc	ix
 	ld	(memad), ix
+	call	skipsp		; check line end
+	or	a, a
+	jr	z, mcmnd1
 	jr	mcmnd2
 
 merr:

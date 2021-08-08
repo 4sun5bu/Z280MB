@@ -23,24 +23,19 @@ UARTRD	.equ 0x16	; UART Receive Data Register
 UARTTD	.equ 0x18	; UART Transmit Data Register
 
 ;------------------------------------------------------------------------------
-	.area	IPL (ABS)
-
-	.org	IPLADDR
+	.area	IPL 
 
 	jr	start
+
 iplorg:
 	.dw	IPLADDR
 
 ldaddr:
-	.dw	0x8000
+	.dw	0xdc00
 nsect:
 	.db	4	; number of sectors
 
 start:
-	ld	hl, mesg
-	call	puts
-	jr	.
-
 	; Map SRAM at the first page
 	ld	l, 0xff
 	ld	c, IOPAGE
@@ -55,9 +50,12 @@ start:
 	ld	c, MMUMCTL
 	out	(c), hl
 	
+	ld	hl, mesg
+	call	puts
+	
 	; Disk read
 	call	dskinit
-	ldw	(lball), 0x0000
+	ldw	(lball), 0x0002
 	ldw	(lbahl), 0x0000
 	ld	hl, (ldaddr)
 1$:	
@@ -70,7 +68,6 @@ start:
 	ld	(nsect), a
 	jr	nz, 1$
 2$:	
-	ret
 	jr	2$
 	jp	(ldaddr)
 
