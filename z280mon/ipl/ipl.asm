@@ -31,11 +31,15 @@ iplorg:
 	.dw	IPLADDR
 
 ldaddr:
-	.dw	0xdc00
+	.dw	0xdc00		; load address
+entry:
+	.dw	0xf200		; entry address
 nsect:
-	.db	4	; number of sectors
+	.db	16		; number of sectors to read
 
 start:
+	ld	sp, stkbtm
+
 	; Map SRAM at the first page
 	ld	l, 0xff
 	ld	c, IOPAGE
@@ -59,17 +63,32 @@ start:
 	ldw	(lbahl), 0x0000
 	ld	hl, (ldaddr)
 1$:	
+	push	hl
 	call	dskread
-	ld	a, '.
+	pop	hl
+	ld	b, 256
+	xor	a, a
+2$:
+	add	a, (hl)
+	inc	hl
+	add	a, (hl)
+	inc	hl
+	djnz	2$
+	ld	e, a
+	call	puthex8
+	ld	a, ',
 	call	putc
 	incw	(lball)
 	ld	a, (nsect)
 	dec	a
 	ld	(nsect), a
 	jr	nz, 1$
-2$:	
-	jr	2$
-	jp	(ldaddr)
+	ld	a, 0x0d
+	call	putc
+	ld	a, 0x0a
+	call	putc
+	ld	hl, (entry)
+	jp	(hl)
 
 putc:
 	push	hl
@@ -96,6 +115,34 @@ puts:
 	inc 	hl
 	jr	puts
 
+puthex4:
+	and	a, 0x0f
+	add	a, '0
+	cp	a, '0 + 10
+	jr	c, putc
+	add	a, 'A - '0 - 10
+	jr	putc
+
+puthex8:
+	push	de
+	srl	e
+	srl	e
+	srl	e
+	srl	e
+	ld	a, e
+	call	puthex4
+	pop	de
+	ld	a, e
+	jr	puthex4
+
+puthex16:
+	push	de
+	ld	e, d
+	call	puthex8
+	pop	de
+	jr	puthex8
+
+
 mesg:
 	.db	0x0d
 	.ascii	"Loading CP/M "
@@ -118,3 +165,6 @@ pgdtbl:
 	.dw	0x10da
 	.dw	0x10ea
 	.dw	0x10fa
+
+	.ds	128
+stkbtm:

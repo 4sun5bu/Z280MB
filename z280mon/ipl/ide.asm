@@ -22,36 +22,50 @@ ERRBIT	.equ	0b00000001
 
 	.area IPL
 
-    .globl dskinit, dskread, lball, lbalh, lbahl, lbahh
+	.globl dskinit, dskread, lball, lbalh, lbahl, lbahh
  
- dskinit:
+chkbsy:
+ 	in	a, (DEVSTAT)
+	and	a, BSYBIT | DREQBIT
+	jr	nz, chkbsy
+	ret
+
+dskinit:
 	ld	hl, 0		; set I/O page register
 	ld	c, IOPAGE
 	ldctl	(c), hl 
-1$:	
-	in	a, (DEVSTAT)	; Check BUSY and DREQ bit
-	and	a, BSYBIT | DREQBIT
-	jr	nz, 1$
-	ld	a, 0x01
+	call	chkbsy
+	ld	a, 0x81		; set 16bit PIO mode
+	out	(FEATURE), a
+	ld	a, 0xef
+	out	(COMND), a
+	call	chkbsy
+	ld	a, 0x04		; set PIO mode 0
+	out	(SECTCNT), a
+	ld	a, 0x03
 	out	(FEATURE), a
 	ld	a, 0xef
 	out	(COMND), a
 	ret
-   
+
 dskread:
 	push	hl	
 	ld	hl, 0		; set I/O page register
 	ld	c, IOPAGE
 	ldctl	(c), hl 
 	pop	hl	
-1$:
-	in	a, (DEVSTAT)	; Check Busy bit
-	and	a, BSYBIT | DREQBIT
-	jr	nz, 1$
+	call	chkbsy
+	xor	a, a		; select DEV #0
+	out	(DEVHEAD), a
+	call	chkbsy
+	xor	a, a		; clear Features
+	out	(FEATURE), a
+	ld	a, 0b00000010	; disable interrupt
+	out	(DEVCTL), a 
 	ld	a, 1		; one sector read
 	out	(SECTCNT), a
 	ld	a, (lbahh)	; set LBA
-	and	a, 0x0f		; mask high nibble
+	and	a, 0x0f		; clear high nibble
 	or	a, 0x40		; set LBA access
 	out	(DEVHEAD), a
 	ld	a, (lbahl)
@@ -62,24 +76,36 @@ dskread:
 	out	(SECTNO), a
 	ld	a, 0x20		; READ SECTOR command
 	out	(COMND), a
-2$:
+	in	a, (ALTSTAT)	;
+1$:
 	in	a, (DEVSTAT)
 	and	a, BSYBIT | DREQBIT
 	cp	a, DREQBIT
-	jr	nz, 2$
-	in	a, (DEVSTAT)
-3$:
-	in	a, (BDATA)
-	ld	(hl), a
+	jr	nz, 1$
+
+	ld	b, 0
+	ld	c, WDATA
+2$:
+	ex	de, hl
+	inw	hl, (c)
+	ex	de, hl
+	ld	(hl), d
 	inc	hl
-	in	a, (DEVSTAT)
-	and	a, #DREQBIT
-	jr	nz, 3$
+	ld	(hl), e
+	inc	hl
+	djnz	2$
+	in	a, (ALTSTAT)
 	in	a, (DEVSTAT)
 	ret
-	
 
-lball:	.db	0
-lbalh:	.db	0
-lbahl:	.db	0
-lbahh:	.db	0
+;------------------------------------------------------------------------------
+	.area	IPLDATA
+
+lball:
+	.db	0
+lbalh:
+	.db	0
+lbahl:
+	.db	0
+lbahh:
+	.db	0

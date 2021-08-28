@@ -7,7 +7,7 @@
 
 	.z280p
 
-IOPGR	.equ	0x08
+IOPAGE	.equ	0x08
 WDATA	.equ	0x60
 BDATA	.equ	0x61
 ERROR	.equ	0x62
@@ -29,38 +29,51 @@ ERRBIT	.equ	0b00000001
 
 	.area CODE
 	.globl dskinit, dskread, dskwrt
-    
-dskinit:
-	ld	hl, 0		; set I/O page register
-	ld	c, IOPGR
-	ldctl	(c), hl 
-1$:	
-	in	a, (DEVSTAT)	; Check BUSY and DREQ bit
+
+chkbsy:
+ 	in	a, (DEVSTAT)
 	and	a, BSYBIT | DREQBIT
-	jr	nz, 1$
-	ld	a, 0x01
+	jr	nz, chkbsy
+	ret
+
+dskinit:
+	ldw	(lball), 0
+	ldw	(lbahl), 0
+	ld	hl, 0		; set I/O page register
+	ld	c, IOPAGE
+	ldctl	(c), hl 
+	call	chkbsy
+	ld	a, 0x81		; set 16bit PIO mode
 	out	(FEATURE), a
 	ld	a, 0xef
 	out	(COMND), a
-	ld	hl, 0
-	ld	(lball), hl
-	ld	(lbahl), hl
+	call	chkbsy
+	ld	a, 0x04		; set PIO mode 0
+	out	(SECTCNT), a
+	ld	a, 0x03
+	out	(FEATURE), a
+	ld	a, 0xef
+	out	(COMND), a
 	ret
 
 dskread:
-	push	hl
+	push	hl	
 	ld	hl, 0		; set I/O page register
-	ld	c, IOPGR
+	ld	c, IOPAGE
 	ldctl	(c), hl 
 	pop	hl	
-1$:
-	in	a, (DEVSTAT)	; Check Busy bit
-	and	a, BSYBIT | DREQBIT
-	jr	nz, 1$
+	call	chkbsy
+	xor	a, a		; select DEV #0
+	out	(DEVHEAD), a
+	call	chkbsy
+	xor	a, a		; clear Features
+	out	(FEATURE), a
+	ld	a, 0b00000010	; disable interrupt
+	out	(DEVCTL), a 
 	ld	a, 1		; one sector read
 	out	(SECTCNT), a
 	ld	a, (lbahh)	; set LBA
-	and	a, 0x0f		; mask high nibble
+	and	a, 0x0f		; clear high nibble
 	or	a, 0x40		; set LBA access
 	out	(DEVHEAD), a
 	ld	a, (lbahl)
@@ -71,32 +84,42 @@ dskread:
 	out	(SECTNO), a
 	ld	a, 0x20		; READ SECTOR command
 	out	(COMND), a
-2$:
+	in	a, (ALTSTAT)	;
+1$:
 	in	a, (DEVSTAT)
 	and	a, BSYBIT | DREQBIT
 	cp	a, DREQBIT
-	jr	nz, 2$
-	in	a, (DEVSTAT)
-3$:
-	in	a, (BDATA)
-	ld	(hl), a
+	jr	nz, 1$
+
+	ld	b, 0
+	ld	c, WDATA
+2$:
+	ex	de, hl
+	inw	hl, (c)
+	ex	de, hl
+	ld	(hl), d
 	inc	hl
-	in	a, (DEVSTAT)
-	and	a, #DREQBIT
-	jr	nz, 3$
+	ld	(hl), e
+	inc	hl
+	djnz	2$
+	in	a, (ALTSTAT)
 	in	a, (DEVSTAT)
 	ret
 
 dskwrt:
 	push	hl
 	ld	hl, 0
-	ld	bc, IOPGR
+	ld	bc, IOPAGE
 	ldctl	(c), hl
 	pop	hl
-1$:
-	in	a, (DEVSTAT)	; Check Busy bit
-	and	a, BSYBIT | DREQBIT
-	jr	nz, 1$
+	call	chkbsy
+	xor	a, a		; select DEV #0
+	out	(DEVHEAD), a
+	call	chkbsy
+	xor	a, a		; clear feature
+	out	(FEATURE), a
+	ld	a, 0b00000010	; disable interrupt
+	out	(DEVCTL), a
 	ld	a, 1		; one sector read
 	out	(SECTCNT), a
 	ld	a, (lbahh)	; set LBA
@@ -111,19 +134,26 @@ dskwrt:
 	out	(SECTNO), a
 	ld	a, 0x30		; READ SECTOR command
 	out	(COMND), a
-2$:
+	in	a, (ALTSTAT)
+1$:
 	in	a, (DEVSTAT)
 	and	a, BSYBIT | DREQBIT
 	cp	a, DREQBIT
-	jr	nz, 2$
+	jr	nz, 1$
 	in	a, (DEVSTAT)
-3$:
-	ld	a, (hl)
-	out	(BDATA), a
+
+	ld	b, 0
+	ld	c, WDATA
+2$:
+	ld	d, (hl)
 	inc	hl
-	in	a, (DEVSTAT)
-	and	a, DREQBIT
-	jr	nz, 3$
+	ld	e, (hl)
+	inc	hl
+	ex	de, hl
+	outw	(c), hl
+	ex	de, hl
+	djnz	2$
+	in	a, (ALTSTAT)
 	in	a, (DEVSTAT)
 	ret
 

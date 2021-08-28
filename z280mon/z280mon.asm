@@ -332,5 +332,5 @@ linebuf:
 dskbuf:	
 	.ds 	1024
 	
-	.ds	256
+	.ds	128
 stkbtm:
