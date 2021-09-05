@@ -33,7 +33,9 @@ UARTTCS	.equ 0x12	; UART Transmiter Control/Status Register
 UARTRCS	.equ 0x14	; UART Receiver Control/Status Register
 UARTRD	.equ 0x16	; UART Receive Data Register
 UARTTD	.equ 0x18	; UART Transmit Data Register
-	
+
+REFRR	.equ 0xe8	; Refresh Rate Registor
+
 CR	.equ 0x0d
 LF	.equ 0x0a
 BS	.equ 0x08
@@ -45,6 +47,19 @@ SPC	.equ 0x20
 	.globl  putc, puts, putln, getc, gets
 	.globl	skipsp, puthex8, puthex16, strhex8, strhex16
 	.globl	adrdel
+
+	; Cahce setting
+	ld	l, 0x00		; cashe enable
+	ld	c, CSHCR
+	ldctl	(c), hl
+	
+	; Refresh rate setting (Mr. Asano's suggest)
+	ld	l, 0xff
+	ld	c, IOPGR
+	ldctl	(c), hl
+	ld	a, 0x3f		; Suppress refresh 
+	ld	c, REFRR
+	out	(c), a
 
 	; MMU setting
 	ld	l, 0xff
@@ -64,12 +79,12 @@ SPC	.equ 0x20
 	ld	l, 0xfe
 	ld	c, IOPGR
 	ldctl	(c), hl
-	ld	hl, 39		; 4800 bps at 12MHz CPU cLock
-	ld	c, CT1TC
+	ld	hl, 20		; 9375bps at 12MHz internal cLock
+	ld	c, CT1TC	; 9600bps at 12.288MHz internal clock
 	out	(c), hl
 	ld	a, 0b10001000
 	out	(CT1CNF), a
-	ld	a, 0b11110000
+	ld	a, 0b11111000
 	out	(CT1CS), a
 
 	; UART

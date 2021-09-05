@@ -33,7 +33,7 @@ chkbsy:
 	ret
 
 dskinit:
-	ld	hl, 0		; set I/O page register
+	ld	l, 0		; set I/O page register
 	ld	c, IOPAGE
 	ldctl	(c), hl 
 	call	chkbsy
@@ -52,7 +52,7 @@ dskinit:
 
 dskread:
 	push	hl	
-	ld	hl, 0		; set I/O page register
+	ld	l, 0		; set I/O page register
 	ld	c, IOPAGE
 	ldctl	(c), hl 
 	pop	hl	
@@ -102,7 +102,7 @@ dskread:
 
 dskwrt:
 	push	hl
-	ld	hl, 0
+	ld	l, 0
 	ld	bc, IOPAGE
 	ldctl	(c), hl
 	pop	hl
@@ -183,5 +183,3 @@ lbahl:
 lbahh:	
 	.ds	1
 
-rcdbuf:
-	.ds	512

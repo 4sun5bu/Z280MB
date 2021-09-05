@@ -89,7 +89,7 @@ dpblk:
 	.dw	2		; OFF : track offset
 
 boot:
-	ld	sp, 0x0000
+	ld	sp, 0x0080
 	call	conini
 	ld	hl, signon
 	call	prmsg
@@ -100,7 +100,7 @@ boot:
 	jp	gocpm
 
 wboot:
-	ld	sp, 0x0000
+	ld	sp, 0x0080
 	ld	c, 0x00
 	call	seldsk
 	call	home
@@ -125,7 +125,7 @@ load1:
 gocpm:
 	ld	a, 0xc3
 	ld	(0x0000), a
-	ld	hl, wboot
+	ld	hl, wboote
 	ld	(0x0001), hl
 
 	ld	(0x0005), a
@@ -214,8 +214,6 @@ seldsk:
 	ret
 
 home:
-	xor	a, a
-	ld	(dskno), a
 	ld	bc, 0
 	
 settrk:
@@ -277,14 +275,14 @@ write:
 	call	dskwrt
 	xor	a, a
 	ret
-	
+
 conini:
 	; C/T1 setting for boud rate
 	ld	l, 0xfe
 	ld	c, IOPAGE
 	ldctl	(c), hl
-	ld	hl, 39		; 4800 bps at 12MHz CPU cLock
-	ld	c, CT1TC
+	ld	hl, 20		; 9375bps at 12MHz internal cLock
+	ld	c, CT1TC	; 9600bps at 12.288MHz internal clock
 	out	(c), hl
 	ld	a, 0b10001000
 	out	(CT1CNF), a
@@ -350,6 +348,9 @@ chk02:
 	.ds	16
 chk03:
 	.ds	16
+
+rcdbuf:
+	.ds	512
 
 ENDDAT	.equ	#.
 DATSIZ	.equ	#. - BEGDAT
