@@ -89,7 +89,7 @@ dpblk:
 	.dw	2		; OFF : track offset
 
 boot:
-	ld	sp, 0x0080
+	ld	sp, BUFF + 128
 	call	conini
 	ld	hl, signon
 	call	prmsg
@@ -100,26 +100,29 @@ boot:
 	jp	gocpm
 
 wboot:
-	ld	sp, 0x0080
+	ld	sp, BUFF + 128
+	ld	bc, CCP
+	call	setdma
 	ld	c, 0x00
 	call	seldsk
 	call	home
-	ld	b, NSECTS
 	ld	c, 8
-	ld	hl, CCP
-load1:
 	call	setsec
-	call	setdma
-	push	hl
+	ld	b, NSECTS
+load1:
 	push	bc
 	call	read
-	cp	a, 0x00
+	or	a, a
 	jr	nz, wboot
-	pop	bc
-	pop	hl
+	ld	hl, (dmaad)
 	ld	de, 128
 	add	hl, de
+	ld	c, l
+	ld	b, h
+	call	setdma
+	pop	bc
 	inc	c
+	call	setsec
 	djnz	load1
 
 gocpm:
